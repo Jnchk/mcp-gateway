@@ -93,7 +93,8 @@ reviewboard | http | down | - | - | connect: dial tcp ... refused (retry in 3s)
 ```
 
 States: `up`, `idle` (connected before, currently closed), `down`, `unknown` (never used).
-`list_servers` may trigger a cheap health probe, cached for 5s.
+`list_servers` never touches the network; it reads the registry snapshot, so a never-used
+upstream stays `unknown` until something calls it.
 
 ### `list_tools`
 
@@ -224,7 +225,8 @@ Authorization: Bearer <status_token>
   "generated_at": "2026-11-17T11:20:03Z",
   "servers": [
     { "name": "redmine", "transport": "http", "state": "up", "tools": 9,
-      "latency_ms": 12, "last_ok": "2026-11-17T11:19:58Z", "last_error": null },
+      "latency_ms": 12, "last_ok": "2026-11-17T11:19:58Z", "last_error": null,
+      "retry_in_s": 0 },
     { "name": "reviewboard", "transport": "http", "state": "down", "tools": 0,
       "latency_ms": null, "last_ok": null,
       "last_error": "connect: dial tcp 127.0.0.1:8910: connect: connection refused" }

@@ -1,0 +1,29 @@
+{
+  "listen": ["127.0.0.1:8930"],
+  "path": "/mcp",
+  "token": "${MCP_GATEWAY_TOKEN}",
+  "status_token": "${MCP_GATEWAY_STATUS_TOKEN}",
+  "idle_timeout": "60s",
+  "connect_timeout": "10s",
+  "call_timeout": "120s",
+  "schema_ttl": "5m",
+  "servers": {
+    "redmine": {
+      "transport": "http",
+      "url": "http://127.0.0.1:8888/mcp",
+      "headers": { "Authorization": "Bearer ${REDMINE_MCP_TOKEN}" }
+    },
+    "redmine-sh": {
+      "transport": "http",
+      "url": "http://127.0.0.1:8889/mcp",
+      "headers": { "Authorization": "Bearer ${REDMINE_SH_MCP_TOKEN}" },
+      "allow": ["search_issues", "get_issue", "list_projects", "list_metadata"]
+    },
+    "reviewboard": {
+      "transport": "stdio",
+      "command": ["/usr/local/bin/reviewboard-mcp"],
+      "env": { "REVIEWBOARD_TOKEN": "${RB_TOKEN}" },
+      "cwd": "/path/to/reviewboard-mcp"
+    }
+  }
+}

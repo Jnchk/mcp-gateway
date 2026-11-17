@@ -1,0 +1,16 @@
+# build output
+/mcp-gateway
+/bin/
+
+# test artifacts
+*.test
+*.out
+coverage.*
+
+# local configuration and secrets
+config.json
+*.local.json
+.env
+
+# plugin build artifacts
+plugin/node_modules/

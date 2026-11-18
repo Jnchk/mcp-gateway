@@ -104,7 +104,7 @@ export function glyph(state: State): string {
     case "idle":
       return "◌"
     case "down":
-      return "○"
+      return "✗"
     default:
       return "?"
   }

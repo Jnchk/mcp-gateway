@@ -116,7 +116,7 @@ test("down rows mention the retry delay", () => {
 test("glyphs cover every state", () => {
   assert.equal(glyph("up"), "●")
   assert.equal(glyph("idle"), "◌")
-  assert.equal(glyph("down"), "○")
+  assert.equal(glyph("down"), "✗")
   assert.equal(glyph("unknown"), "?")
 })
 

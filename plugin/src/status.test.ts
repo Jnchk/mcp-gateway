@@ -52,20 +52,24 @@ test("parseStatus degrades unknown states and ignores extra fields", () => {
   assert.equal(s.servers[0].latency_ms, null)
 })
 
-test("summarize counts and tones", () => {
+test("summarize counts healthy upstreams and tones", () => {
   const allUp: Snapshot = { generated_at: "", servers: [{ ...parseStatus(payload).servers[0] }] }
-  assert.deepEqual(summarize(allUp), { up: 1, total: 1, badge: "GW 1/1", tone: "ok" })
+  assert.deepEqual(summarize(allUp), { healthy: 1, total: 1, badge: "GW 1/1", tone: "ok" })
+
+  // idle counts as healthy: it worked before and was closed by the idle timer.
+  const allIdle = summarize(parseStatus({ servers: [payload.servers[2]] }))
+  assert.deepEqual(allIdle, { healthy: 1, total: 1, badge: "GW 1/1", tone: "ok" })
 
   const mixed = summarize(parseStatus(payload))
-  assert.equal(mixed.up, 1)
+  assert.equal(mixed.healthy, 2)
   assert.equal(mixed.total, 3)
-  assert.equal(mixed.badge, "GW 1/3")
+  assert.equal(mixed.badge, "GW 2/3")
   assert.equal(mixed.tone, "warn")
 
   const allDown = summarize(parseStatus({ servers: [payload.servers[1]] }))
   assert.equal(allDown.tone, "error")
 
-  assert.deepEqual(summarize({ generated_at: "", servers: [] }), { up: 0, total: 0, badge: "GW -", tone: "muted" })
+  assert.deepEqual(summarize({ generated_at: "", servers: [] }), { healthy: 0, total: 0, badge: "GW -", tone: "muted" })
 })
 
 test("badge stays short for large fleets", () => {
@@ -83,7 +87,7 @@ test("badgeFor prioritises config and staleness over data", () => {
   assert.deepEqual(badgeFor(null, 0, false), { badge: "GW !", tone: "error" })
   assert.deepEqual(badgeFor(null, 0, true), { badge: "GW …", tone: "muted" })
   assert.deepEqual(badgeFor(snap, 3, true), { badge: "GW ?", tone: "muted" })
-  assert.deepEqual(badgeFor(snap, 2, true), { badge: "GW 1/3", tone: "warn" })
+  assert.deepEqual(badgeFor(snap, 2, true), { badge: "GW 2/3", tone: "warn" })
 })
 
 test("rows render at most the limit plus a remainder", () => {

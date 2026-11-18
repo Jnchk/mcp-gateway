@@ -26,7 +26,7 @@ export interface Row {
 }
 
 export interface Summary {
-  up: number
+  healthy: number // up + idle: idle means "worked before, closed by the idle timer"
   total: number
   badge: string
   tone: Tone
@@ -77,15 +77,15 @@ function parseUpstream(raw: unknown, index: number): Upstream {
 
 export function summarize(s: Snapshot): Summary {
   const total = s.servers.length
-  const up = s.servers.filter((u) => u.state === "up").length
+  const healthy = s.servers.filter((u) => u.state === "up" || u.state === "idle").length
   const down = s.servers.filter((u) => u.state === "down").length
 
-  if (total === 0) return { up: 0, total: 0, badge: "GW -", tone: "muted" }
+  if (total === 0) return { healthy: 0, total: 0, badge: "GW -", tone: "muted" }
 
-  const badge = total > 99 ? `GW ${up}/99+` : `GW ${up}/${total}`
+  const badge = total > 99 ? `GW ${healthy}/99+` : `GW ${healthy}/${total}`
   let tone: Tone = "ok"
-  if (down > 0) tone = up === 0 ? "error" : "warn"
-  return { up, total, badge, tone }
+  if (down > 0) tone = healthy === 0 ? "error" : "warn"
+  return { healthy, total, badge, tone }
 }
 
 // badgeFor is what the footer renders: config and load failures outrank data.

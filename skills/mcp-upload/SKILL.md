@@ -22,10 +22,9 @@ upstream and is named by that upstream's own skill.
 ## Usage
 
 ```bash
-python3 ~/.config/opencode/skills/mcp-upload/scripts/mcp_upload.py --server <upstream> --path FILE
+# run from the root of your mcp-gateway clone
+python3 skills/mcp-upload/scripts/mcp_upload.py --server <upstream> --path FILE
 ```
-
-In this repository the script is at `skills/mcp-upload/scripts/mcp_upload.py`.
 
 Flags: `--server` (required), `--path` (required), `--filename`, `--url`, `--token`, `--config`,
 `--timeout`, `--json` (print the whole response).

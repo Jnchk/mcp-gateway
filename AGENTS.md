@@ -39,6 +39,8 @@ cd plugin && npm test && npm run typecheck
   session and arms the 5s→60s backoff.
 - `deny` is checked in `call_tool` before `registry.Call`, so a denied tool never opens a connection.
 - `/status` must stay network-free; it reads `Registry.Snapshot()` only.
+- `POST /upload/<server>` forwards to the upstream's `/upload` with the configured `headers`; it uses
+  the MCP token and the `max_upload` cap, and must never expose upstream credentials to the client.
 
 ## Configuration
 

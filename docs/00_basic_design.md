@@ -138,6 +138,15 @@ exist; there is only `gateway_call_tool`. The gateway therefore owns enforcement
 `deny` wins over `allow`; an empty `allow` means "everything not denied". Denial is checked before
 connecting, so a blocked call never opens a connection.
 
+### Staging passthrough (upload)
+
+`POST /upload/<server>?filename=<name>` (MCP token, `max_upload` cap) forwards the body to the
+upstream's own `/upload` route with its configured headers, and returns the upstream response. This
+keeps client-side file staging on the gateway instead of requiring a second direct connection to the
+upstream. For HTTP upstreams `upload_url` defaults to the upstream URL with `/mcp` replaced by
+`/upload`; the helper and skill description live in the `redmine-mcp` repository under
+`docs/gateway-upload/`.
+
 ---
 
 ## 4. Upstream configuration

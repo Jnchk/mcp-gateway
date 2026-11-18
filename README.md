@@ -53,7 +53,8 @@ Copy [`config.example.json`](config.example.json) to `~/.config/mcp-gateway/conf
 | `connect_timeout` | per-connect deadline (default `10s`) |
 | `call_timeout` | per-tool-call deadline (default `120s`) |
 | `schema_ttl` | tool-catalog cache lifetime (default `5m`) |
-| `servers.<name>` | `http` (`url`, `headers`) or `stdio` (`command`, `env`, `cwd`) |
+| `max_upload` | cap for `POST /upload/<server>` (default 25 MiB) |
+| `servers.<name>` | `http` (`url`, `headers`, optional `upload_url`) or `stdio` (`command`, `env`, `cwd`) |
 | `allow` / `deny` | tool name lists (`*` supported); `deny` wins and is checked before connecting |
 
 ## Run
@@ -84,6 +85,23 @@ mcp-gateway --config ~/.config/mcp-gateway/config.json --stdio     # stdio
 
 A result above 256 KiB is truncated with a visible marker. Upstream `IsError` results keep their text
 and gain a `[server/tool]` prefix.
+
+## Upload passthrough
+
+Clients can stage a file without ever talking to the upstream:
+
+```
+POST http://127.0.0.1:8930/upload/<server>?filename=report.pdf
+Authorization: Bearer <token>            # the MCP token, not the status token
+Content-Type: application/octet-stream
+```
+
+The gateway forwards the bytes to that upstream's own `/upload` route with the upstream credentials and
+returns its response (the staging id). For HTTP upstreams `upload_url` defaults to the upstream URL with
+`/mcp` replaced by `/upload`; set it explicitly for a different path.
+
+A ready-to-use helper (and skill description) lives in the `redmine-mcp` repository at
+`docs/gateway-upload/`: `python3 docs/gateway-upload/scripts/mcp_upload.py --server redmine --path FILE`.
 
 ## TUI plugin
 

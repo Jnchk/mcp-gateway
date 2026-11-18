@@ -21,6 +21,7 @@ import (
 	"github.com/Jnchk/mcp-gateway/internal/gateway"
 	"github.com/Jnchk/mcp-gateway/internal/registry"
 	"github.com/Jnchk/mcp-gateway/internal/status"
+	"github.com/Jnchk/mcp-gateway/internal/upload"
 )
 
 const version = "0.1.0"
@@ -85,6 +86,9 @@ func serveHTTP(ctx context.Context, cfg *config.Config, reg *registry.Registry, 
 	mux := http.NewServeMux()
 	mux.Handle(cfg.Path, withToken(cfg.Token, handler))
 	mux.Handle("/status", status.Handler(reg, cfg.StatusToken))
+	// POST /upload/<upstream>?filename=... keeps client-side staging on the
+	// gateway instead of requiring a direct connection to the upstream.
+	mux.Handle("/upload/", upload.Handler(reg, cfg.Token, cfg.MaxUpload))
 
 	addrs, err := cfg.ListenAddrs()
 	if err != nil {

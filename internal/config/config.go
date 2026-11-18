@@ -33,6 +33,7 @@ func (d Duration) Value() time.Duration { return time.Duration(d) }
 type Upstream struct {
 	Transport string            `json:"transport"`
 	URL       string            `json:"url,omitempty"`
+	UploadURL string            `json:"upload_url,omitempty"`
 	Headers   map[string]string `json:"headers,omitempty"`
 	Command   []string          `json:"command,omitempty"`
 	Env       map[string]string `json:"env,omitempty"`
@@ -50,6 +51,7 @@ type Config struct {
 	ConnectTimeout Duration            `json:"connect_timeout"`
 	CallTimeout    Duration            `json:"call_timeout"`
 	SchemaTTL      Duration            `json:"schema_ttl"`
+	MaxUpload      int64               `json:"max_upload"`
 	Servers        map[string]Upstream `json:"servers"`
 }
 
@@ -89,9 +91,24 @@ func (c *Config) applyDefaults() {
 	if c.Path == "" {
 		c.Path = "/mcp"
 	}
+	if c.MaxUpload <= 0 {
+		c.MaxUpload = 25 << 20
+	}
 	if len(c.Listen) == 0 {
 		c.Listen = []string{"127.0.0.1:8930"}
 	}
+	// An HTTP upstream that exposes a staging route on the same listener gets
+	// /upload/<name> for free; upload_url overrides it.
+	for name, s := range c.Servers {
+		if s.Transport == "http" && s.UploadURL == "" {
+			if u, err := url.Parse(s.URL); err == nil && u.Host != "" {
+				u.Path = strings.TrimSuffix(strings.TrimSuffix(u.Path, "/"), "/mcp") + "/upload"
+				s.UploadURL = u.String()
+			}
+		}
+		c.Servers[name] = s
+	}
+
 	defaults := []struct {
 		d   *Duration
 		def time.Duration

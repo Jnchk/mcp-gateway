@@ -98,6 +98,16 @@ func (r *Registry) HasServer(name string) bool {
 	return ok
 }
 
+// Upstream returns a copy of the configured upstream, for routes that speak
+// HTTP to it directly (the upload staging passthrough).
+func (r *Registry) Upstream(name string) (config.Upstream, bool) {
+	e, ok := r.servers[name]
+	if !ok {
+		return config.Upstream{}, false
+	}
+	return e.cfg, true
+}
+
 // Allowed reports whether the allow/deny lists permit a tool on this upstream.
 func (r *Registry) Allowed(name, tool string) bool {
 	e, ok := r.servers[name]

@@ -110,3 +110,48 @@ func TestListenAddrsSplitsCommas(t *testing.T) {
 		}
 	}
 }
+
+func TestUploadURLDerivation(t *testing.T) {
+	cases := []struct {
+		name, url, explicit, want string
+	}{
+		{"plain", "http://h:1/mcp", "", "http://h:1/upload"},
+		{"sub-uri", "http://h:1/redmine/mcp", "", "http://h:1/redmine/upload"},
+		{"no mcp suffix", "http://h:1/base", "", "http://h:1/base/upload"},
+		{"explicit wins", "http://h:1/mcp", "http://other/up", "http://other/up"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			body := `{"servers":{"a":{"transport":"http","url":"` + tc.url + `"`
+			if tc.explicit != "" {
+				body += `,"upload_url":"` + tc.explicit + `"`
+			}
+			body += `}}}`
+			c, err := Load(write(t, body))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := c.Servers["a"].UploadURL; got != tc.want {
+				t.Fatalf("upload_url = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestMaxUploadDefaultAndOverride(t *testing.T) {
+	c, err := Load(write(t, minimal))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.MaxUpload != 25<<20 {
+		t.Fatalf("default max_upload = %d", c.MaxUpload)
+	}
+
+	c, err = Load(write(t, `{"max_upload":1024,"servers":{"a":{"transport":"http","url":"http://h"}}}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.MaxUpload != 1024 {
+		t.Fatalf("max_upload = %d", c.MaxUpload)
+	}
+}

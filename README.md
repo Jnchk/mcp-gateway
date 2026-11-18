@@ -104,8 +104,10 @@ implements `POST /upload` returning `{"id": ...}` works. For HTTP upstreams `upl
 `/mcp` replaced by `/upload`; set it explicitly for a different path.
 
 The neutral `mcp-upload` helper lives in `skills/mcp-upload/`:
-`python3 skills/mcp-upload/scripts/mcp_upload.py --server <upstream> --path FILE`. Upstream-specific
-skills (Redmine attachments, Obsidian document bodies) reference it.
+`python3 skills/mcp-upload/scripts/mcp_upload.py --server <upstream> --path FILE`. It reads its own
+client config, `~/.config/mcp-gateway/client.json` (`url` + gateway `token` only), so a client machine
+never needs the gateway's `config.json`. Upstream-specific skills (Redmine attachments, Obsidian
+document bodies) reference it.
 
 ## TUI plugin
 

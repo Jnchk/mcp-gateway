@@ -6,7 +6,7 @@ description: Stage a local file through mcp-gateway and return the id a tool can
 # mcp-upload
 
 Neutral client for the gateway's staging route. It knows nothing about Redmine or Obsidian: `--server`
-is whichever upstream name is configured in `~/.config/mcp-gateway/config.json`.
+is whichever upstream name the gateway has configured.
 
 ```
 POST http://<gateway>/upload/<server>?filename=<name>
@@ -37,9 +37,24 @@ python3 ~/.config/opencode/skills/mcp-upload/scripts/mcp_upload.py --server <ups
 In this repository the script is at `skills/mcp-upload/scripts/mcp_upload.py`.
 
 Flags: `--server` (required), `--path` (required), `--filename`, `--url`, `--token`, `--config`,
-`--timeout`, `--json` (print the whole response). The token and gateway address come from
-`~/.config/mcp-gateway/config.json` (or `$MCP_GATEWAY_CONFIG`); `--url`/`--token`/`MCP_GATEWAY_URL`/
-`MCP_GATEWAY_TOKEN` override them. Never pass `--token` on the command line: it lands in shell history.
+`--timeout`, `--json` (print the whole response).
+
+## Client config
+
+The client reads its own file, `~/.config/mcp-gateway/client.json` (or `$MCP_GATEWAY_CONFIG`), mode 600:
+
+```json
+{
+  "url": "http://192.168.101.91:8930",
+  "token": "<gateway token>"
+}
+```
+
+That is deliberately not the gateway's `config.json`, which also lists the upstream servers and their
+credentials. `url` may instead be spelled `listen` (the gateway's own key) for an already-working local
+setup. An optional `servers` object restricts the `--server` names this client may send; without it the
+gateway is the only judge. `--url`/`--token`/`MCP_GATEWAY_URL`/`MCP_GATEWAY_TOKEN` override the file.
+Never pass `--token` on the command line: it lands in shell history.
 
 ## Requirements
 

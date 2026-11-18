@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """Stage one local file through mcp-gateway and print the upload id.
 
-Neutral client: `--server` names any upstream in the gateway config that implements the
+Neutral client: `--server` names any upstream on the gateway that implements the
 `POST /upload` contract and returns `{"id": ...}`. The file is sent to the gateway, which forwards it
 to the upstream with that upstream's credentials, so the client never talks to the upstream directly.
+
+The client has its own config file, `~/.config/mcp-gateway/client.json`, holding only what a client
+needs: the gateway `url` and the gateway `token`. It never reads the gateway's own config.json, which
+carries the upstream credentials.
 
 Standard library only; runs on Linux, macOS and Windows.
 
@@ -37,7 +41,7 @@ def config_path(explicit: str | None) -> Path:
         return Path(override).expanduser()
     base = os.environ.get("XDG_CONFIG_HOME")
     root = Path(base).expanduser() if base else Path.home() / ".config"
-    return root / "mcp-gateway" / "config.json"
+    return root / "mcp-gateway" / "client.json"
 
 
 def load_config(path: Path) -> dict:
@@ -123,11 +127,11 @@ def main(argv: list[str] | None = None) -> int:
         description="Stage a local file through mcp-gateway and print its upload id.",
     )
     ap.add_argument("--path", required=True, help="local file to upload")
-    ap.add_argument("--server", required=True, help="upstream name in the gateway config")
+    ap.add_argument("--server", required=True, help="upstream name as the gateway knows it")
     ap.add_argument("--filename", help="name the upstream should show (default: the file's basename)")
     ap.add_argument("--url", help="gateway base URL, e.g. http://127.0.0.1:8930")
     ap.add_argument("--token", help="gateway token; prefer the config or MCP_GATEWAY_TOKEN")
-    ap.add_argument("--config", help="path to the gateway config.json")
+    ap.add_argument("--config", help="path to the client config (default: ~/.config/mcp-gateway/client.json)")
     ap.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT, help="seconds (default 60)")
     ap.add_argument("--json", action="store_true", help="print the whole response object")
     args = ap.parse_args(argv)
@@ -148,11 +152,12 @@ def main(argv: list[str] | None = None) -> int:
     servers = cfg.get("servers") or {}
     if not isinstance(servers, dict):
         return message(f"upload: {cfg_file} has no servers object", 2)
-    if args.server not in servers:
+    if servers and args.server not in servers:
         known = ", ".join(sorted(servers)) or "none"
         return message(f'upload: unknown server "{args.server}" in {cfg_file}; known: {known}', 2)
 
-    base = args.url or os.environ.get("MCP_GATEWAY_URL") or listen_base(cfg)
+    base = (args.url or os.environ.get("MCP_GATEWAY_URL") or cfg.get("url")
+            or listen_base(cfg))
     token = args.token or os.environ.get("MCP_GATEWAY_TOKEN") or cfg.get("token")
 
     name = args.filename or src.name

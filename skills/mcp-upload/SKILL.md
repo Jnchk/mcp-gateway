@@ -1,11 +1,11 @@
 ---
 name: mcp-upload
-description: Stage a local file through mcp-gateway and return the id a tool can consume. Use for any upstream that accepts upload ids (Redmine attachments, Obsidian note bodies, and any other server implementing the staging contract).
+description: Stage a local file through mcp-gateway's upload route and return the id a tool can consume. Use when a file on this machine must reach any upstream that accepts upload ids.
 ---
 
 # mcp-upload
 
-Neutral client for the gateway's staging route. It knows nothing about Redmine or Obsidian: `--server`
+Neutral client for the gateway's staging route. It knows nothing about any particular upstream: `--server`
 is whichever upstream name the gateway has configured.
 
 ```
@@ -16,17 +16,8 @@ Content-Type: application/octet-stream
 ```
 
 The id is single-use and expires (the upstream decides the TTL; 15 minutes is the common default).
-Pass it to the tool that consumes uploads, for example:
-
-```js
-// Redmine
-await tools.gateway.call_tool({ server: "redmine", tool: "create_issue",
-  arguments: { project: "...", subject: "...", attach_upload_ids: ["<id>"] } })
-
-// Obsidian note body
-await tools.gateway.call_tool({ server: "obsitrace", tool: "write",
-  arguments: { path: "Inbox/report.md", contentUploadId: "<id>" } })
-```
+Pass it to the argument the consuming tool documents for upload ids; the argument name differs per
+upstream and is named by that upstream's own skill.
 
 ## Usage
 

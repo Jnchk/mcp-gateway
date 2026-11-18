@@ -40,6 +40,11 @@ type Upstream struct {
 	CWD       string            `json:"cwd,omitempty"`
 	Allow     []string          `json:"allow,omitempty"`
 	Deny      []string          `json:"deny,omitempty"`
+
+	// UploadRequiresAny names the tools whose permission makes staging useful
+	// for this upstream. nil means the default (create_issue/update_issue);
+	// an explicit empty list disables uploads.
+	UploadRequiresAny []string `json:"upload_requires_any,omitempty"`
 }
 
 type Config struct {

@@ -84,6 +84,9 @@ func New(cfg *config.Config, opts Options) *Registry {
 
 	r := &Registry{opts: opts, servers: map[string]*entry{}}
 	for name, u := range cfg.Servers {
+		if u.UploadRequiresAny == nil {
+			u.UploadRequiresAny = []string{"create_issue", "update_issue"}
+		}
 		r.servers[name] = &entry{name: name, cfg: u}
 		r.names = append(r.names, name)
 	}

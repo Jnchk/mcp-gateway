@@ -56,6 +56,7 @@ Copy [`config.example.json`](config.example.json) to `~/.config/mcp-gateway/conf
 | `max_upload` | cap for `POST /upload/<server>` (default 25 MiB) |
 | `servers.<name>` | `http` (`url`, `headers`, optional `upload_url`) or `stdio` (`command`, `env`, `cwd`) |
 | `allow` / `deny` | tool name lists (`*` supported); `deny` wins and is checked before connecting |
+| `upload_requires_any` | tools whose permission enables `/upload/<server>`; default `["create_issue","update_issue"]`, use `["write"]` for obsitrace, `[]` disables |
 
 ## Run
 
@@ -97,12 +98,14 @@ Content-Type: application/octet-stream
 ```
 
 The gateway forwards the bytes to that upstream's own `/upload` route with the upstream credentials and
-returns its response (the staging id). Uploads require that `create_issue` or `update_issue` is allowed on that upstream
-(the `allow`/`deny` list), so a read-only upstream cannot be used as a file drop. For HTTP upstreams `upload_url` defaults to the upstream URL with
+returns its response (the staging id). Uploads require at least one of the upstream's `upload_requires_any` tools to be allowed, so a
+read-only upstream cannot be used as a file drop. The route is upstream-agnostic: any server that
+implements `POST /upload` returning `{"id": ...}` works. For HTTP upstreams `upload_url` defaults to the upstream URL with
 `/mcp` replaced by `/upload`; set it explicitly for a different path.
 
-A ready-to-use helper (and skill description) lives in the `redmine-mcp` repository at
-`docs/gateway-upload/`: `python3 docs/gateway-upload/scripts/mcp_upload.py --server redmine --path FILE`.
+The neutral `mcp-upload` helper lives in `skills/mcp-upload/`:
+`python3 skills/mcp-upload/scripts/mcp_upload.py --server <upstream> --path FILE`. Upstream-specific
+skills (Redmine attachments, Obsidian document bodies) reference it.
 
 ## TUI plugin
 

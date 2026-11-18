@@ -221,3 +221,32 @@ func TestUploadAllowedWhenOnlyUpdateIssueIsAllowed(t *testing.T) {
 		t.Fatalf("status = %d", res.Code)
 	}
 }
+
+func TestUploadUsesConfiguredTools(t *testing.T) {
+	srv, _ := fakeUpstream(t, http.StatusCreated, `{"id":"x"}`)
+	cases := []struct {
+		name    string
+		up      config.Upstream
+		allowed bool
+	}{
+		{"custom tool allowed", config.Upstream{Transport: "http", URL: "http://h/mcp", UploadURL: srv.URL + "/upload", UploadRequiresAny: []string{"write"}, Allow: []string{"write"}}, true},
+		{"custom tool denied", config.Upstream{Transport: "http", URL: "http://h/mcp", UploadURL: srv.URL + "/upload", UploadRequiresAny: []string{"write"}, Deny: []string{"write"}}, false},
+		{"explicit empty disables", config.Upstream{Transport: "http", URL: "http://h/mcp", UploadURL: srv.URL + "/upload", UploadRequiresAny: []string{}}, false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			reg := registry.New(&config.Config{Servers: map[string]config.Upstream{"up": tc.up}}, registry.Options{})
+			defer reg.Close()
+
+			req := httptest.NewRequest(http.MethodPost, "/upload/up?filename=x", strings.NewReader("data"))
+			res := httptest.NewRecorder()
+			Handler(reg, "", 1<<20).ServeHTTP(res, req)
+			if tc.allowed && res.Code != http.StatusCreated {
+				t.Fatalf("status = %d, want 201", res.Code)
+			}
+			if !tc.allowed && res.Code != http.StatusForbidden {
+				t.Fatalf("status = %d, want 403", res.Code)
+			}
+		})
+	}
+}

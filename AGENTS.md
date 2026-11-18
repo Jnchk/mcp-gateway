@@ -40,7 +40,7 @@ cd plugin && npm test && npm run typecheck
 - `deny` is checked in `call_tool` before `registry.Call`, so a denied tool never opens a connection.
 - `/status` must stay network-free; it reads `Registry.Snapshot()` only.
 - `POST /upload/<server>` forwards to the upstream's `/upload` with the configured `headers`; it uses
-  the MCP token, the `max_upload` cap, and requires `create_issue` to be allowed for that upstream.
+  the MCP token, the `max_upload` cap, and requires `create_issue` or `update_issue` to be allowed for that upstream.
   It must never expose upstream credentials to the client.
 
 ## Configuration

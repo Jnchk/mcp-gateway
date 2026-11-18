@@ -168,8 +168,8 @@ func TestUploadRespectsAllowDeny(t *testing.T) {
 		name string
 		up   config.Upstream
 	}{
-		{"deny create_issue", config.Upstream{Transport: "http", URL: "http://h/mcp", UploadURL: srv.URL + "/upload", Deny: []string{"create_issue"}}},
-		{"allow list without create_issue", config.Upstream{Transport: "http", URL: "http://h/mcp", UploadURL: srv.URL + "/upload", Allow: []string{"search_issues"}}},
+		{"deny both writers", config.Upstream{Transport: "http", URL: "http://h/mcp", UploadURL: srv.URL + "/upload", Deny: []string{"create_issue", "update_issue"}}},
+		{"allow list without writers", config.Upstream{Transport: "http", URL: "http://h/mcp", UploadURL: srv.URL + "/upload", Allow: []string{"search_issues"}}},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -193,6 +193,24 @@ func TestUploadAllowedViaWildcard(t *testing.T) {
 	srv, _ := fakeUpstream(t, http.StatusCreated, `{"id":"x"}`)
 	reg := registry.New(&config.Config{Servers: map[string]config.Upstream{
 		"red": {Transport: "http", URL: "http://h/mcp", UploadURL: srv.URL + "/upload", Allow: []string{"*"}},
+	}}, registry.Options{})
+	defer reg.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/upload/red?filename=x", strings.NewReader("data"))
+	res := httptest.NewRecorder()
+	Handler(reg, "", 1<<20).ServeHTTP(res, req)
+	if res.Code != http.StatusCreated {
+		t.Fatalf("status = %d", res.Code)
+	}
+}
+
+func TestUploadAllowedWhenOnlyUpdateIssueIsAllowed(t *testing.T) {
+	srv, _ := fakeUpstream(t, http.StatusCreated, `{"id":"x"}`)
+	reg := registry.New(&config.Config{Servers: map[string]config.Upstream{
+		"red": {
+			Transport: "http", URL: "http://h/mcp", UploadURL: srv.URL + "/upload",
+			Deny: []string{"create_issue"}, // update_issue still allowed -> staging is useful
+		},
 	}}, registry.Options{})
 	defer reg.Close()
 

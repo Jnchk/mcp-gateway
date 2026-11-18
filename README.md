@@ -97,7 +97,7 @@ Content-Type: application/octet-stream
 ```
 
 The gateway forwards the bytes to that upstream's own `/upload` route with the upstream credentials and
-returns its response (the staging id). Uploads require that `create_issue` is allowed on that upstream
+returns its response (the staging id). Uploads require that `create_issue` or `update_issue` is allowed on that upstream
 (the `allow`/`deny` list), so a read-only upstream cannot be used as a file drop. For HTTP upstreams `upload_url` defaults to the upstream URL with
 `/mcp` replaced by `/upload`; set it explicitly for a different path.
 

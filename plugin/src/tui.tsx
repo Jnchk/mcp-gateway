@@ -94,7 +94,11 @@ export default Plugin.define({
             {(row) => (
               <box flexDirection="row">
                 <text fg={toneColor(row.tone)}>{row.glyph === "" ? "" : `${row.glyph} `}</text>
-                <text fg={rowTextColor(row)}>{row.glyph === "" ? row.name : `${row.name} ${row.detail}`}</text>
+                <text fg={rowTextColor(row)}>{row.name}</text>
+                <box flexGrow={1} />
+                <Show when={row.detail !== ""}>
+                  <text fg={rowTextColor(row)}>{row.detail}</text>
+                </Show>
               </box>
             )}
           </For>

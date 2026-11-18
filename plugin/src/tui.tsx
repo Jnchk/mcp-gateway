@@ -47,15 +47,23 @@ export default Plugin.define({
     })
     if (cfg.token !== "" && configError === "") poller.start()
 
-    function toneColor(tone: Tone): string {
+    function themeText(): Record<string, string> {
       const theme = context.theme as unknown as { text?: Record<string, string> }
-      return themeColor(tone, theme.text)
+      return theme.text ?? {}
     }
 
-    // Rows and the footer stay in the theme's base color; only the glyph is tinted.
+    function toneColor(tone: Tone): string {
+      return themeColor(tone, themeText())
+    }
+
+    // Up rows read like a directly connected server (base color); every other
+    // state uses the muted "connected label" grey.
     function baseColor(): string {
-      const theme = context.theme as unknown as { text?: Record<string, string> }
-      return theme.text?.base ?? "white"
+      return themeText().base ?? "white"
+    }
+
+    function rowTextColor(row: Row): string {
+      return row.tone === "ok" ? baseColor() : themeColor("muted", themeText())
     }
 
     const badge = () => badgeFor(snap(), failures(), cfg.token !== "" && configError === "")
@@ -72,10 +80,11 @@ export default Plugin.define({
       return `updated ${seconds}s ago`
     }
 
-    const offFooter = context.ui.slot({
-      append: "home.footer.status",
-      render: () => <text fg={baseColor()}>{badge().badge}</text>,
-    })
+    // home.footer.status only renders on the home screen; prompt.footer.status
+    // is the one visible while a session tab is open.
+    const badgeView = () => <text fg={baseColor()}>{badge().badge}</text>
+    const offFooter = context.ui.slot({ append: "home.footer.status", render: badgeView })
+    const offPromptFooter = context.ui.slot({ append: "prompt.footer.status", render: badgeView })
 
     const offSidebar = context.ui.slot({
       append: "sidebar.content",
@@ -85,7 +94,7 @@ export default Plugin.define({
             {(row) => (
               <box flexDirection="row">
                 <text fg={toneColor(row.tone)}>{row.glyph === "" ? "" : `${row.glyph} `}</text>
-                <text fg={baseColor()}>{row.glyph === "" ? row.name : `${row.name} ${row.detail}`}</text>
+                <text fg={rowTextColor(row)}>{row.glyph === "" ? row.name : `${row.name} ${row.detail}`}</text>
               </box>
             )}
           </For>
@@ -146,6 +155,7 @@ export default Plugin.define({
     return () => {
       poller.stop()
       offFooter()
+      offPromptFooter()
       offSidebar()
     }
   },

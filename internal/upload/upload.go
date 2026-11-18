@@ -43,6 +43,12 @@ func Handler(reg *registry.Registry, token string, maxBytes int64) http.Handler 
 			http.Error(w, "server "+name+" does not support uploads (needs an http upstream with upload_url)", http.StatusBadRequest)
 			return
 		}
+		// Attachments are only useful for create_issue, so the same allow/deny
+		// policy that gates the tool also gates staging for this upstream.
+		if !reg.Allowed(name, "create_issue") {
+			http.Error(w, "server "+name+" does not allow create_issue, so uploads are disabled for it", http.StatusForbidden)
+			return
+		}
 		filename := r.URL.Query().Get("filename")
 		if filename == "" {
 			http.Error(w, "filename is required", http.StatusBadRequest)

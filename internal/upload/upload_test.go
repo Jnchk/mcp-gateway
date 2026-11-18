@@ -160,3 +160,46 @@ func TestUploadIsPostOnly(t *testing.T) {
 		t.Fatalf("status = %d", res.Code)
 	}
 }
+
+func TestUploadRespectsAllowDeny(t *testing.T) {
+	srv, rec := fakeUpstream(t, http.StatusCreated, `{"id":"x"}`)
+
+	cases := []struct {
+		name string
+		up   config.Upstream
+	}{
+		{"deny create_issue", config.Upstream{Transport: "http", URL: "http://h/mcp", UploadURL: srv.URL + "/upload", Deny: []string{"create_issue"}}},
+		{"allow list without create_issue", config.Upstream{Transport: "http", URL: "http://h/mcp", UploadURL: srv.URL + "/upload", Allow: []string{"search_issues"}}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			reg := registry.New(&config.Config{Servers: map[string]config.Upstream{"red": tc.up}}, registry.Options{})
+			defer reg.Close()
+
+			req := httptest.NewRequest(http.MethodPost, "/upload/red?filename=x", strings.NewReader("data"))
+			res := httptest.NewRecorder()
+			Handler(reg, "", 1<<20).ServeHTTP(res, req)
+			if res.Code != http.StatusForbidden {
+				t.Fatalf("status = %d, want 403", res.Code)
+			}
+			if rec.calls != 0 {
+				t.Fatalf("upstream called %d times despite deny", rec.calls)
+			}
+		})
+	}
+}
+
+func TestUploadAllowedViaWildcard(t *testing.T) {
+	srv, _ := fakeUpstream(t, http.StatusCreated, `{"id":"x"}`)
+	reg := registry.New(&config.Config{Servers: map[string]config.Upstream{
+		"red": {Transport: "http", URL: "http://h/mcp", UploadURL: srv.URL + "/upload", Allow: []string{"*"}},
+	}}, registry.Options{})
+	defer reg.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/upload/red?filename=x", strings.NewReader("data"))
+	res := httptest.NewRecorder()
+	Handler(reg, "", 1<<20).ServeHTTP(res, req)
+	if res.Code != http.StatusCreated {
+		t.Fatalf("status = %d", res.Code)
+	}
+}

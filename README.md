@@ -92,19 +92,26 @@ and gain a `[server/tool]` prefix.
 
 ```json
 {
-  "plugins": ["/path/to/mcp-gateway/plugin"]
+  "plugins": [
+    {
+      "package": "/home/jinchk/.config/opencode.plugins/mcp-gateway-status",
+      "options": {
+        "url": "http://127.0.0.1:8930",
+        "token": "<status_token>",
+        "intervalMs": 5000
+      }
+    }
+  ]
 }
 ```
 
-```bash
-export MCP_GATEWAY_STATUS_URL=http://127.0.0.1:8930
-export MCP_GATEWAY_STATUS_TOKEN=<status_token>
-# optional: MCP_GATEWAY_STATUS_INTERVAL=5000 (ms, clamped 1s-60s)
-```
+The token lives in `cli.json` (mode 600), not in the environment. Environment variables
+(`MCP_GATEWAY_STATUS_URL`, `MCP_GATEWAY_STATUS_TOKEN`, `MCP_GATEWAY_STATUS_INTERVAL`) still work as a
+fallback and are useful for a one-off test.
 
 The footer shows `GW 2/3` (up/total), `GW ?` after three failed polls, `GW !` when the token is missing
 and `GW …` while loading. The sidebar lists each upstream; `/gateway-status` opens a detail dialog with
-`last_error`. The token is read from the environment only — never from `cli.json` or plugin storage.
+`last_error`. Configuration precedence: plugin `options` → environment → plugin storage (URL only) → default.
 
 ## Security
 

@@ -5,14 +5,27 @@ export interface Settings {
   intervalMs: number
 }
 
+// Supplied from cli.json plugin options; the documented way to configure a
+// local TUI plugin without environment variables.
+export interface Options {
+  url?: string
+  token?: string
+  intervalMs?: number
+}
+
 export const DEFAULT_URL = "http://127.0.0.1:8930"
 export const DEFAULT_INTERVAL_MS = 5000
 
-export function resolveConfig(env: Record<string, string | undefined>, storedURL?: string): Settings {
-  const url = normalizeURL(firstNonEmpty(env.MCP_GATEWAY_STATUS_URL, storedURL, DEFAULT_URL))
-  const token = (env.MCP_GATEWAY_STATUS_TOKEN ?? "").trim()
-  const intervalMs = clampInterval(Number(env.MCP_GATEWAY_STATUS_INTERVAL ?? DEFAULT_INTERVAL_MS))
-  return { url, token, intervalMs }
+export function resolveConfig(
+  env: Record<string, string | undefined>,
+  storedURL?: string,
+  options: Options = {},
+): Settings {
+  // Plugin options win: they live in cli.json, not in the environment.
+  const url = normalizeURL(firstNonEmpty(options.url, env.MCP_GATEWAY_STATUS_URL, storedURL, DEFAULT_URL))
+  const token = (firstNonEmpty(options.token, env.MCP_GATEWAY_STATUS_TOKEN)).trim()
+  const rawInterval = options.intervalMs ?? env.MCP_GATEWAY_STATUS_INTERVAL ?? DEFAULT_INTERVAL_MS
+  return { url, token, intervalMs: clampInterval(Number(rawInterval)) }
 }
 
 function firstNonEmpty(...values: Array<string | undefined>): string {

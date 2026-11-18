@@ -19,7 +19,7 @@ export default Plugin.define({
     let cfg: { url: string; token: string; intervalMs: number }
     let configError = ""
     try {
-      cfg = resolveConfig(env(), stored.url)
+      cfg = resolveConfig(env(), stored.url, context.options as { url?: string; token?: string; intervalMs?: number })
     } catch (err) {
       configError = describeError(err)
       cfg = { url: "", token: "", intervalMs: 5000 }

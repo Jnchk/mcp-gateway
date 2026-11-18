@@ -7,6 +7,20 @@ test("defaults when nothing is configured", () => {
   assert.deepEqual(resolveConfig({}), { url: DEFAULT_URL, token: "", intervalMs: 5000 })
 })
 
+test("plugin options win over env and storage", () => {
+  const got = resolveConfig(
+    { MCP_GATEWAY_STATUS_URL: "http://env:1", MCP_GATEWAY_STATUS_TOKEN: "from-env", MCP_GATEWAY_STATUS_INTERVAL: "7000" },
+    "http://stored:1",
+    { url: "http://options:2", token: "from-options", intervalMs: 2500 },
+  )
+  assert.deepEqual(got, { url: "http://options:2", token: "from-options", intervalMs: 2500 })
+})
+
+test("optional option fields fall back to env", () => {
+  const got = resolveConfig({ MCP_GATEWAY_STATUS_TOKEN: "from-env" }, "http://stored:1", { url: "http://options:2" })
+  assert.deepEqual(got, { url: "http://options:2", token: "from-env", intervalMs: 5000 })
+})
+
 test("env wins over the stored URL", () => {
   const got = resolveConfig(
     { MCP_GATEWAY_STATUS_URL: "http://10.0.0.5:9000/", MCP_GATEWAY_STATUS_TOKEN: "  t  ", MCP_GATEWAY_STATUS_INTERVAL: "9000" },

@@ -52,10 +52,12 @@ cd plugin && npm test && npm run typecheck
 - Pure logic lives in `src/status.ts`, `src/config.ts`, `src/poller.ts` and is tested with
   `node --test`; `src/tui.tsx` only wires slots/signals to it. Keep it that way so tests stay runnable
   without OpenCode.
-- The token comes from `MCP_GATEWAY_STATUS_TOKEN` only. Never put it in `cli.json`, storage, logs, or a
-  rendered string.
+- The token comes from cli.json plugin `options` (primary) or `MCP_GATEWAY_STATUS_TOKEN` (fallback). Never
+  put it in plugin storage, logs, or a rendered string.
 - The plugin talks to `GET /status`, never to MCP tools.
 - Local loading in `cli.json` accepts absolute paths or `file:///…`; this is verified, not inferred.
+- `~/.config/opencode.plugins/mcp-gateway-status/` is an installed **copy**; refresh it after plugin
+  changes with `cp plugin/package.json plugin/src/*.{ts,tsx,d.ts} …/src/` (or recopy the tree).
 
 ## Tests
 

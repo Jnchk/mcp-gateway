@@ -82,14 +82,12 @@ refuses a syntax, the fallback is `npx tsc --noEmit` for types plus `node --expe
 
 Precedence, highest first:
 
-1. `MCP_GATEWAY_STATUS_URL` / `MCP_GATEWAY_STATUS_TOKEN` from the plugin process environment.
-2. `context.storage.store("config", …)` — user-editable from the dialog's "Settings" action; no token
-   here, URL only.
-3. Default `http://127.0.0.1:8930`.
-
-`context.options` is not used: the `cli.json` `plugins` entry is a string list with no options
-schema we can rely on (see §8). The environment route works for local and SSH-forwarded setups and
-keeps the token out of every JSON file.
+1. `context.options` — the object form in `cli.json`:
+   `{ "package": "…", "options": { "url", "token", "intervalMs" } }`. This is the primary route:
+   the token lives in `cli.json` (mode 600), not in the environment.
+2. `MCP_GATEWAY_STATUS_URL` / `MCP_GATEWAY_STATUS_TOKEN` from the process environment (one-off tests).
+3. `context.storage.store("config", …)` — URL only, never a token.
+4. Default `http://127.0.0.1:8930`.
 
 Validation:
 
@@ -245,9 +243,9 @@ gateway), confirming load, poll, parse and render. `cli.json` also accepts the o
 `{ "package": "…", "options": { … } }`; this plugin keeps its URL and token in the environment instead,
 so options stay unused.
 
-Security: the plugin runs in the TUI process and inherits its environment. The token therefore
-must come from the environment, never from `cli.json` (which may be shared or synced) and never
-from `context.storage` (which is durable and visible in the UI).
+Security: the token lives in `cli.json` plugin options (mode 600) or the environment — never in
+`context.storage` (durable and visible in the UI) and never in a rendered string or log line. If
+`cli.json` is shared or synced, prefer the environment fallback instead.
 
 ---
 

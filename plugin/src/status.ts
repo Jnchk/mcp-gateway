@@ -162,3 +162,20 @@ export function describeError(err: unknown, max = 120): string {
     .replace(/\b(token|api_key|apikey|password|secret)=[^\s&]+/gi, "$1=***")
   return truncate(s, max)
 }
+
+// themeColor maps a tone to a theme token, with a fixed palette as fallback.
+// ResolvedTheme does not always expose success/warning/error tokens, and a
+// missing token would otherwise render everything in the base color.
+export function themeColor(tone: Tone, text: Record<string, string> | undefined): string {
+  const t = text ?? {}
+  switch (tone) {
+    case "ok":
+      return t.success ?? "#4ade80"
+    case "warn":
+      return t.warning ?? "#fbbf24"
+    case "error":
+      return t.error ?? "#f87171"
+    default:
+      return t.muted ?? "#8b949e"
+  }
+}

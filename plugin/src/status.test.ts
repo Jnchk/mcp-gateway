@@ -3,6 +3,7 @@ import { test } from "node:test"
 
 import {
   badgeFor,
+  themeColor,
   describeError,
   glyph,
   parseStatus,
@@ -137,4 +138,13 @@ test("describeError bounds the message", () => {
   const got = describeError(new Error("x".repeat(500)))
   assert.equal(Array.from(got).length, 121)
   assert.ok(got.endsWith("…"))
+})
+
+test("themeColor prefers theme tokens and falls back to a palette", () => {
+  assert.equal(themeColor("ok", { success: "green-token" }), "green-token")
+  assert.equal(themeColor("ok", {}), "#4ade80")
+  assert.equal(themeColor("ok", { base: "white" }), "#4ade80")
+  assert.equal(themeColor("warn", {}), "#fbbf24")
+  assert.equal(themeColor("error", {}), "#f87171")
+  assert.equal(themeColor("muted", {}), "#8b949e")
 })

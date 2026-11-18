@@ -5,7 +5,7 @@ import { For, Show, createSignal } from "solid-js"
 
 import { resolveConfig } from "./config.ts"
 import { createPoller } from "./poller.ts"
-import { badgeFor, describeError, glyph, rows, toneOf, type Row, type Snapshot, type Tone } from "./status.ts"
+import { badgeFor, describeError, glyph, rows, themeColor, toneOf, type Row, type Snapshot, type Tone } from "./status.ts"
 
 function env(): Record<string, string | undefined> {
   return typeof process === "undefined" ? {} : process.env
@@ -49,18 +49,7 @@ export default Plugin.define({
 
     function toneColor(tone: Tone): string {
       const theme = context.theme as unknown as { text?: Record<string, string> }
-      const text = theme.text ?? {}
-      const base = text.base ?? "white"
-      switch (tone) {
-        case "ok":
-          return text.success ?? base
-        case "warn":
-          return text.warning ?? base
-        case "error":
-          return text.error ?? base
-        default:
-          return text.muted ?? base
-      }
+      return themeColor(tone, theme.text)
     }
 
     const badge = () => badgeFor(snap(), failures(), cfg.token !== "" && configError === "")

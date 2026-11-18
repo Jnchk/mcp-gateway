@@ -29,8 +29,8 @@ Rules:
 - The footer badge must never grow beyond ~10 characters; anything longer belongs in the dialog.
 - The sidebar shows at most 8 upstreams; the rest collapse into `+3 more` (open the dialog for all).
 - The dialog is the only place `last_error` is rendered, truncated to 120 chars.
-- State glyphs: `●` up, `◌` idle, `✗` down, `?` unknown/stale. `○` was too close to `◌` at
-  terminal size, so a failed upstream gets a cross. Colors come from `context.theme`
+- State glyphs: `●` up, `◌` idle, `!` down, `?` unknown/stale. ASCII `!` is single-width in
+  every terminal; `○` was too close to `◌` and `✗` is ambiguous-width in CJK fonts. Colors come from `context.theme`
   (`text.success`, `text.warning`, `text.error`, `text.muted`); never hard-coded hex.
 
 ---
